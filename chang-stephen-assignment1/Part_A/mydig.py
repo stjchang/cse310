@@ -7,6 +7,7 @@ import dns.rdatatype
 import dns.flags
 import dns.exception
 import dns.rcode
+import time
 
 # IPv4 addresses of the DNS root servers
 ROOT_SERVERS = [
@@ -237,17 +238,39 @@ def main():
     
     print(f"Resolving: {domain}")
 
+    start_time = time.time()
+
     try:
         response = resolve(domain)
     except RuntimeError as e:
         print(f"Error: {e}")
         sys.exit(1)
+        
+    elapsed_time = (time.time() - start_time) * 1000
 
-    print("\nANSWER SECTION:")
+    # formatting purposes to match assignments output
+    print("QUESTION SECTION:\n")
+    qname = domain.rstrip(".") + "."
+    print(f"{qname:<32}IN      A")
 
+    print("\nANSWER SECTION:\n")
+
+    # Print the answer section with the correct format
     for section in response.answer:
+        name = str(section.name)
+        rdtype = dns.rdatatype.to_text(section.rdtype)
+
         for record in section:
-            print(record)
+            print(
+                f"{name:<24}"
+                f"{section.ttl:<7}"
+                f"IN      "
+                f"{rdtype:<8}"
+                f"{record}"
+            )
+        
+    print(f"\nQuery time: {elapsed_time:.0f} ms")
+    print(f"WHEN: {datetime.now()}")
             
 if __name__ == "__main__":
     main()
